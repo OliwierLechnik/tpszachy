@@ -1,87 +1,70 @@
 import asyncio
 from game import Game
 from mmh3 import hash
+import uuid
 
 class Server:
     def __init__(self, host='127.0.0.1', port=8888):
         self.host = host
         self.port = port
         self.unpaired_clients = dict()
-        self.pairing_requests = set()
 
     async def handle_client(self, reader, writer):
         client = (reader, writer)
-        my_hash = f"{hash(f'{client[0]}:{client[1]}') & 0xFFFFFFFF:08x}"
-        self.unpaired_clients[my_hash] = client
-        writer.write(b"Connected to the server.\n Type `LIST` to list all connections waiting for pairing request.\n Type `GET_ID` to get your connmection id.\n Type 'PAIR:<client_id>' to send a pairing request.\n Type `ACCEPT:<client_id>` to accept a pairing request.\n")
-        writer.write(bytes(",".join([key for key in self.unpaired_clients.keys() if key != my_hash] or ["Wow so empty"]) + "\n", "utf-8"))
+        my_id = str(uuid.uuid4())
+        self.unpaired_clients[my_id] = client
+        writer.write(b"Connected to the server.\n Type `LIST` to list all open lobbys.\n Type `GET_ID` to get your connmection id.\n Type 'CREATE:<lobby_size>' host a lobby o size <lobby_size>.\n Type `JOIN:<lobby_id>` join open lobby.\n")
         await writer.drain()
 
         try:
             while True:
+                if my_id not in self.unpaired_clients.keys():
+                    return
                 data = await reader.read(100)
                 if not data:
                     break
 
                 message = data.decode().strip()
-                if message.startswith("PAIR:"):
-                    await self.pairing_requests.add((my_hash, message[5:]))
-                elif message.startswith("ACCEPT:"):
-                    writer.write(bytes("[" + " ".join([key for key in self.unpaired_clients.keys() if key != my_hash] or ["Wow so empty"]) + "]\n", "utf-8"))
-                elif message.startswith("GET_ID"):
-                    writer.write(bytes(my_hash, "utf-8"))
+                if message.startswith("CREATE:"):
+                    try:
+                        if number := int(message[7:]) in [2,3,4,6]:
+                            Game([my_id, reader, writer], number)
+                            print("transferred ownership of client to the game thread, exiting the handling thread")
+                            return
+                        else:
+                            writer.write(b"Invalid lobby size.\n")
+                    except ValueError as e:
+                        writer.write(b"NaN\n")
+                elif message.startswith("JOIN:"):
+                    print("attenpted join")
+                    if uuid.UUID(message[5:]) in Game.game_queue.keys():
+                        print("if worked")
+                        try:
+                            writer.write(b"Joined.\n")
+                            await writer.drain()
+                            Game.game_queue.get(uuid.UUID(message[5:])).join([my_id,reader,writer])
+                            return
+                        except KeyError as e:
+                            writer.write(b"Failed to join.\n")
+                    else:
+                        writer.write(b"No game with this id.\n")
+
                 elif message.startswith("LIST"):
-                    writer.write(bytes(",".join([key for key in self.unpaired_clients.keys() if key != my_hash] or ["Wow so empty"]) + "\n", "utf-8"))
+                    writer.write(bytes("[" + ",".join(map(str, Game.game_queue.keys())) + "]\n", "utf-8"))
+
                 else:
                     writer.write(b"Unknown command.\n")
-                    await writer.drain()
+                await writer.drain()
         except (asyncio.IncompleteReadError, ConnectionResetError):
             pass
         finally:
-            self.unpaired_clients.pop(my_hash)
-            writer.close()
-            await writer.wait_closed()
+            try:
+                self.unpaired_clients.pop(my_id)
+            except KeyError as e:
+                pass
 
-    async def handle_pair_request(self, client, target_id):
-        reader, writer = client
-        target_client = None
-
-        for candidate_reader, candidate_writer in self.unpaired_clients:
-            if id(candidate_writer) == int(target_id):  # Match by unique writer ID
-                target_client = (candidate_reader, candidate_writer)
-                break
-
-        if not target_client:
-            writer.write(b"Target client not found.\n")
-            await writer.drain()
-            return
-
-        # Send pairing request to the target client
-        target_reader, target_writer = target_client
-        target_writer.write(b"PAIRING REQUEST RECEIVED. Type 'ACCEPT' to accept.\n")
-        await target_writer.drain()
-
-        # Wait for the target client's response
-        try:
-            response = await asyncio.wait_for(target_reader.read(100), timeout=30)
-            if response.decode().strip() == "ACCEPT":
-                # Pairing accepted, start the game
-                self.unpaired_clients.discard(client)
-                self.unpaired_clients.discard(target_client)
-                writer.write(b"Pairing successful! Starting the game.\n")
-                await writer.drain()
-                target_writer.write(b"Pairing successful! Starting the game.\n")
-                await target_writer.drain()
-
-                # Transfer ownership of clients to Game
-                game = Game(client, target_client)
-                asyncio.create_task(game.start())
-            else:
-                writer.write(b"Pairing request denied.\n")
-                await writer.drain()
-        except asyncio.TimeoutError:
-            writer.write(b"Pairing request timed out.\n")
-            await writer.drain()
+            # writer.close()
+            # await writer.wait_closed()
 
     async def start(self):
         server = await asyncio.start_server(self.handle_client, self.host, self.port)

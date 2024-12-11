@@ -1,38 +1,51 @@
 import asyncio
+import uuid
+import time
 
 class Game:
 
-    gameList = set()
+    game_queue = dict()
+    def __init__(self, host, size=6):
+        self.players = [host]
+        self.size = size
+        self.uuid = uuid.uuid4()
+        Game.game_queue[self.uuid] = self
 
-    def __init__(self, client1, client2):
-        self.client1 = client1
-        self.client2 = client2
-        Game.gameList.append(self)
-        self.start()
+        asyncio.create_task(self.start())
+
+
+        # asyncio.create_task(self.start())
+
+    def join(self, player):
+        self.players.append(player)
+
 
     async def start(self):
-        print("Game started between two clients.")
-        reader1, writer1 = self.client1
-        reader2, writer2 = self.client2
+        for p in self.players:
+           p[2].write(b"Game Started.\n")
+           await p[2].drain()
 
-        try:
-            while True:
-                await self.exchange_messages(reader1, writer1, reader2, writer2)
-                await self.exchange_messages(reader2, writer2, reader1, writer1)
-        except (asyncio.IncompleteReadError, ConnectionResetError):
-            print("A client disconnected.")
-        finally:
-            writer1.close()
-            writer2.close()
-            await writer1.wait_closed()
-            await writer2.wait_closed()
-            print("Game ended.")
+        while True:
+            for p in self.players:
+                msg = str()
+                try:
+                    data = await asyncio.wait_for(p[1].read(100), timeout=0.5)
+                    if data:
+                        msg: str = data.decode().strip()
 
-    async def exchange_messages(self, reader, writer, opponent_reader, opponent_writer):
-        writer.write(b"Your turn: ")
-        await writer.drain()
-        data = await reader.read(100)
-        if not data:
-            raise ConnectionResetError
-        opponent_writer.write(b"Opponent says: " + data)
-        await opponent_writer.drain()
+                except asyncio.TimeoutError:
+                    # If no data is available, skip and do other tasks
+                    pass
+                except Exception as e:
+                    print(f"Error: {e}")
+
+                if msg.startswith("NICK:"):
+                    p[0] = msg[5:]
+
+                elif msg:
+                   for r in self.players:
+                       if r != p:
+                           r[2].write(bytes(f"<{p[0]}> {msg}\n", "utf-8"))
+                # time.sleep(1)
+
+
