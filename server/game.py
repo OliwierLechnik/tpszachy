@@ -1,6 +1,7 @@
 import asyncio
 import uuid
 import time
+from board import Board
 
 class Game:
 
@@ -9,14 +10,15 @@ class Game:
         self.players = [host]
         self.size = size
         self.uuid = uuid.uuid4()
+        self.b = Board()
         Game.game_queue[self.uuid] = self
 
         asyncio.create_task(self.start())
 
 
-        # asyncio.create_task(self.start())
-
     def join(self, player):
+        for p in self.players:
+            p[2].write(bytes(f"[{player[0]} joined the lobby] \n", "utf-8"))
         self.players.append(player)
 
 
@@ -29,7 +31,7 @@ class Game:
             for p in self.players:
                 msg = str()
                 try:
-                    data = await asyncio.wait_for(p[1].read(100), timeout=0.5)
+                    data = await asyncio.wait_for(p[1].read(100), timeout=0.1)
                     if data:
                         msg: str = data.decode().strip()
 

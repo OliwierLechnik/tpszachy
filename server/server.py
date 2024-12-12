@@ -1,6 +1,5 @@
 import asyncio
 from game import Game
-from mmh3 import hash
 import uuid
 
 class Server:
@@ -37,12 +36,18 @@ class Server:
                         writer.write(b"NaN\n")
                 elif message.startswith("JOIN:"):
                     print("attenpted join")
-                    if uuid.UUID(message[5:]) in Game.game_queue.keys():
+                    id = None
+                    try:
+                        id = uuid.UUID(message[5:])
+                    except:
+                        writer.write(b"Invalid id format.\n")
+                        break
+                    if id in Game.game_queue.keys():
                         print("if worked")
                         try:
+                            Game.game_queue.get(id).join([my_id,reader,writer])
                             writer.write(b"Joined.\n")
                             await writer.drain()
-                            Game.game_queue.get(uuid.UUID(message[5:])).join([my_id,reader,writer])
                             return
                         except KeyError as e:
                             writer.write(b"Failed to join.\n")
@@ -63,8 +68,9 @@ class Server:
             except KeyError as e:
                 pass
 
-            # writer.close()
-            # await writer.wait_closed()
+
+
+
 
     async def start(self):
         server = await asyncio.start_server(self.handle_client, self.host, self.port)
