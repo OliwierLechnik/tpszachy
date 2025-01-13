@@ -1,5 +1,5 @@
 import asyncio
-from game import Game
+from Game import Game
 import uuid
 
 class Server:

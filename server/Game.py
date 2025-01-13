@@ -1,7 +1,7 @@
 import asyncio
 import uuid
 import time
-from board import Board
+from Board import Board
 
 class Game:
 
@@ -11,6 +11,7 @@ class Game:
         self.size = size
         self.uuid = uuid.uuid4()
         self.b = Board()
+        self.b.generateBoard()
         Game.game_queue[self.uuid] = self
 
         asyncio.create_task(self.start())

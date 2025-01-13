@@ -1,5 +1,5 @@
 import asyncio
-from server import Server
+from Server import Server
 
 
 # entry point
