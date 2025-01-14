@@ -1,5 +1,6 @@
+import json
 
-from Node import Node
+from DrawableNode import DrawableNode as Node
 import numpy as np
 
 class Board:
@@ -61,16 +62,23 @@ class Board:
         translator = {
             2: (2,5),
             3: (0, 2, 4),
-            4: (1, 2, 4, 5),
+            4: (0, 1, 3, 4),
             6: (0, 1, 2, 3, 4, 5)
         }
 
         for c in translator[n]:
             d = add_c_6(c-1)
             colorOrigin = self.origin[c][c][c][d][d][d]
-            colorOrigin.setColor(c)
+            colorOrigin.setColor(c+1)
+
+            for i in [0,2,4]:
+                colorOrigin[add_c_6(c+i)][add_c_6(d+i)].setColor(c+1)
+
             for node in colorOrigin.nodes:
-                node.setColor(c)
+                node.setColor(c+1)
+
+
+
 
 
     def printBoard(self):
@@ -82,13 +90,12 @@ class Board:
 if __name__ == "__main__":
     b = Board()
     b.generateBoard()
-    b.printBoard()
     b.generatePawns(3)
-    b.printBoard()
 
+    b.origin.clear()
 
-
-
+    b.origin.clear()
+    b.origin.drawNodes(0,0,0,0)
 
     def toJson(self):
         pass

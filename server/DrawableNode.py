@@ -5,7 +5,7 @@ class DrawableNode(Node):
     def clear(self):
         def helper():
             self.drawn = False
-            for n in self.drawn:
+            for n in self.nodes:
                 if n is not None:
                     n.clear()
 
@@ -18,6 +18,16 @@ class DrawableNode(Node):
 
 
     def draw(self, radius, x, y):
+        colors = [
+            (125,125,125),
+            (255,0,0),
+            (0,255,255),
+            (0,0,255),
+            (255,255,0),
+            (0,255,255),
+            (255,0,255)
+        ]
+        color = colors[self.color]
         self.drawn = True
 
     def drawNodes(self, radius, margin, x, y):
