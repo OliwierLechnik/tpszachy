@@ -1,20 +1,26 @@
+import json
 
-from Node import Node
+from shared.Node import Node
 import numpy as np
 
 class Board:
-    def __init__(self):
-        pass
+    def __init__(self, nodeImplementation = Node):
+        self.nodeImplementation = nodeImplementation
 
     def generateBoard(self):
         amounts = [1,2,3,4,13,12,11,10,9,10,11,12,13,4,3,2,1]
         rawBoard = np.zeros((17, 27), object)
+        nodeList = list()
         odd = False
         for i, a in enumerate(amounts):
-            for j in range(a//2+1):
+            for j in range(a // 2 + 1):
                 try:
-                    rawBoard[i,12+( 2 * j - (1 if odd else 0)) ] = Node()
-                    rawBoard[i,12-( 2 * j - (1 if odd else 0)) ] = Node()
+                    node_a = rawBoard[i, 12 + (2 * j - (1 if odd else 0))] = self.nodeImplementation()
+                    nodeList.append(node_a)
+
+                    if 12 + (2 * j - (1 if odd else 0)) != 12 - (2 * j - (1 if odd else 0)):
+                        node_b = rawBoard[i, 12 - (2 * j - (1 if odd else 0))] = self.nodeImplementation()
+                        nodeList.append(node_b)
                 except:
                     print(f"debil ({i},{j})")
 
@@ -50,6 +56,10 @@ class Board:
                         rawBoard[i,j][k] = rawBoard[v[0], v[1]] if rawBoard[v[0], v[1]] != 0 else None
         self.rawBoard = rawBoard
         self.origin = rawBoard[8,12]
+        self.nodeList = nodeList
+
+    def killAllOrphans(self):  # requires to use setpos first
+        self.nodeList = [node for node in self.nodeList if hasattr(node, "pos")]
 
     def generatePawns(self, n):  # n - number of players
         if n not in [2,3,4,6]:
@@ -61,16 +71,23 @@ class Board:
         translator = {
             2: (2,5),
             3: (0, 2, 4),
-            4: (1, 2, 4, 5),
+            4: (0, 1, 3, 4),
             6: (0, 1, 2, 3, 4, 5)
         }
 
         for c in translator[n]:
             d = add_c_6(c-1)
             colorOrigin = self.origin[c][c][c][d][d][d]
-            colorOrigin.setColor(c)
+            colorOrigin.setColor(c+1)
+
+            for i in [0,2,4]:
+                colorOrigin[add_c_6(c+i)][add_c_6(d+i)].setColor(c+1)
+
             for node in colorOrigin.nodes:
-                node.setColor(c)
+                node.setColor(c+1)
+
+
+
 
 
     def printBoard(self):
@@ -82,13 +99,15 @@ class Board:
 if __name__ == "__main__":
     b = Board()
     b.generateBoard()
-    b.printBoard()
     b.generatePawns(3)
     b.printBoard()
+    print(b.origin.__class__)
 
+    def diff():
+        pass
 
-
-
+    def patch():
+        pass
 
     def toJson(self):
         pass

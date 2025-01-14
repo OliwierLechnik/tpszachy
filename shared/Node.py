@@ -1,5 +1,8 @@
+import json
+
 class Node:
 
+    id_counter = 0
     def __init__(self):
         self.nodes = [
             None,  # 0 - right
@@ -9,6 +12,9 @@ class Node:
             None,  # 4 - top left
             None   # 5 - top right
         ]
+        self.id = Node.id_counter
+        Node.id_counter += 1
+
         self.color = 0
 
 
@@ -28,3 +34,11 @@ class Node:
 
     def __delitem__(self, index):
         self.nodes[index] = None
+
+def validMove(a,b):
+    if a in b:
+        return True
+    elif a in [b[i][i] for i in range(6) if b[i] is not None and b[i].color != 0]:
+        return True
+    else:
+        return False
