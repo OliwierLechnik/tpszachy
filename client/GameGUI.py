@@ -29,7 +29,7 @@ b.generatePawns(6)
 b.origin.setpos(15, 5, 400, 300)
 b.killAllOrphans()
 
-Mycolor = 2
+Mycolor = 5
 
 
 # Function to check if a point is inside a circle
