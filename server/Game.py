@@ -1,7 +1,7 @@
 import asyncio
 import uuid
 import time
-from Board import Board
+from shared.Board import Board
 
 class Game:
 

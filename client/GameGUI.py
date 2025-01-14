@@ -12,6 +12,18 @@ def validMove(a,b):
     else:
         return False
 
+# Function to check if a point is inside a circle
+def is_point_in_circle(x, y, cx, cy, radius):
+    distance = math.sqrt((x - cx)**2 + (y - cy)**2)
+    return distance <= radius
+
+pygame.font.init()
+text_font = pygame.font.SysFont(None, 30)
+
+def draw_text(text, font, text_col,x,y):
+    img = font.render(text, True, text_col)
+    screen.blit(img, (x, y))
+
 # Initialize Pygame
 pygame.init()
 
@@ -23,34 +35,36 @@ pygame.display.set_caption("asian chess")
 circle_x2, circle_y2 = 111, 111  # Circle center
 circle_radius = 20
 
+#initializing the board
 b = Board(DrawableNode)
 b.generateBoard()
 b.generatePawns(6)
 b.origin.setpos(15, 5, 400, 300)
 b.killAllOrphans()
 
-Mycolor = 5
+Mycolor = 2
+MyTurn = True
 
 
-# Function to check if a point is inside a circle
-def is_point_in_circle(x, y, cx, cy, radius):
-    distance = math.sqrt((x - cx)**2 + (y - cy)**2)
-    return distance <= radius
-
-# Main loop
-running = True
 
 MousePressed = False
 CircleAttached = False
 target = None
 original_x, original_y = None, None
 
+# Main loop
+running = True
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-        elif event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                MyTurn = False
+
+        elif event.type == pygame.MOUSEBUTTONDOWN and MyTurn:
             MousePressed = True
             mouse_x, mouse_y = pygame.mouse.get_pos()
 
@@ -89,6 +103,8 @@ while running:
     # Update screen
     screen.fill((0,0,0))  # Clear screen with white color
     # Draw the circle
+    draw_text("Dupa",text_font, (255,255,255),50,50)
+    screen
 
     for node in b.nodeList:
         node.draw(screen)
