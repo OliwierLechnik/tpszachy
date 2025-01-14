@@ -10,12 +10,14 @@ class Board:
     def generateBoard(self):
         amounts = [1,2,3,4,13,12,11,10,9,10,11,12,13,4,3,2,1]
         rawBoard = np.zeros((17, 27), object)
+        nodeList = list()
         odd = False
         for i, a in enumerate(amounts):
             for j in range(a//2+1):
                 try:
-                    rawBoard[i,12+( 2 * j - (1 if odd else 0)) ] = Node()
-                    rawBoard[i,12-( 2 * j - (1 if odd else 0)) ] = Node()
+                    node_a = rawBoard[i,12+( 2 * j - (1 if odd else 0)) ] = Node()
+                    node_b = rawBoard[i,12-( 2 * j - (1 if odd else 0)) ] = Node()
+                    nodeList.append(node_a, node_b)
                 except:
                     print(f"debil ({i},{j})")
 
@@ -96,6 +98,12 @@ if __name__ == "__main__":
 
     b.origin.clear()
     b.origin.drawNodes(0,0,0,0)
+
+    def diff():
+        pass
+
+    def patch():
+        pass
 
     def toJson(self):
         pass
