@@ -17,7 +17,8 @@ class Board:
                 try:
                     node_a = rawBoard[i,12+( 2 * j - (1 if odd else 0)) ] = Node()
                     node_b = rawBoard[i,12-( 2 * j - (1 if odd else 0)) ] = Node()
-                    nodeList.append(node_a, node_b)
+                    nodeList.append(node_a)
+                    nodeList.append(node_b)
                 except:
                     print(f"debil ({i},{j})")
 
