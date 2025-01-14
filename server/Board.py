@@ -54,6 +54,7 @@ class Board:
                         rawBoard[i,j][k] = rawBoard[v[0], v[1]] if rawBoard[v[0], v[1]] != 0 else None
         self.rawBoard = rawBoard
         self.origin = rawBoard[8,12]
+        self.nodeList = nodeList
 
     def generatePawns(self, n):  # n - number of players
         if n not in [2,3,4,6]:
