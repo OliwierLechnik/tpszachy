@@ -17,7 +17,10 @@ class DrawableNode(Node):
             helper()
 
 
-    def draw(self, radius, x, y):
+    def draw(self):
+        if not hasattr(self,"pos"):
+            raise Exception("No attribute Node.pos. Call Node.setpos(radius, margin, x, y) first.")
+        x,y = self.pos
         colors = [
             (125,125,125),
             (255,0,0),
@@ -30,19 +33,22 @@ class DrawableNode(Node):
         color = colors[self.color]
         self.drawn = True
 
-    def drawNodes(self, radius, margin, x, y):
+    def drawNodes(self):
         if not hasattr(self, 'drawn'):
             raise Exception("No attribute `self.drawn`. Did you forget to call `self.clear()` first?")
 
         if not self.drawn:
-            self.draw(
-                radius,
-                x,
-                y
-            )
+            self.draw()
             for i, n in enumerate(self.nodes):
                 if n is not None:
-                    n.drawNodes(
+                    n.drawNodes()
+
+    def setpos(self, radius, margin, x, y):
+        if not hasattr(self, 'pos'):
+            self.pos = (x,y)
+            for i, n in enumerate(self.nodes):
+                if n is not None:
+                    n.setpos(
                         radius,
                         margin,
                         x + (2 * radius + margin) * math.cos(i / 3 * math.pi),  # next x
