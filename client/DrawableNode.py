@@ -13,9 +13,9 @@ class DrawableNode(Node):
         return distance <= self.radius
 
 
-    def draw(self,screen):
+    def draw(self,screen, coloured = True):
         colors = [
-            (125,125,125),
+            (69,69,69),
             (255,0,0),
             (0,255,0),
             (0,0,255),

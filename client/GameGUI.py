@@ -4,111 +4,108 @@ import math
 from shared.Board import Board
 from DrawableNode import DrawableNode
 
-def validMove(a,b):
-    if a in b:
-        return True
-    elif a in [b[i][i] for i in range(6) if b[i] is not None and b[i].color != 0]:
-        return True
-    else:
-        return False
-
-# Function to check if a point is inside a circle
-def is_point_in_circle(x, y, cx, cy, radius):
-    distance = math.sqrt((x - cx)**2 + (y - cy)**2)
-    return distance <= radius
-
-pygame.font.init()
-text_font = pygame.font.SysFont(None, 30)
-
-def draw_text(text, font, text_col,x,y):
-    img = font.render(text, True, text_col)
-    screen.blit(img, (x, y))
-
-# Initialize Pygame
-pygame.init()
-
-# Screen setup
-WIDTH, HEIGHT = 800, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("asian chess")
-# Circle properties
-circle_x2, circle_y2 = 111, 111  # Circle center
-circle_radius = 20
-
-#initializing the board
-b = Board(DrawableNode)
-b.generateBoard()
-b.generatePawns(6)
-b.origin.setpos(15, 5, 400, 300)
-b.killAllOrphans()
-
-Mycolor = 2
-MyTurn = True
 
 
+class GameGui:
+    def __init__(self, players, mycolor, board: Board):
 
-MousePressed = False
-CircleAttached = False
-target = None
-original_x, original_y = None, None
+        # Initialize Pygame
+        pygame.font.init()
+        text_font = pygame.font.SysFont(None, 30)
+        pygame.init()
 
-# Main loop
-running = True
+        # Screen setup
+        WIDTH, HEIGHT = 800, 600
+        screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        pygame.display.set_caption("asian chess")
 
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+        # initializing the board
+        board.origin.setpos(15, 5, WIDTH//2, HEIGHT//2)
+        board.killAllOrphans()
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RETURN:
-                MyTurn = False
+        self.board = board
+        self.screen = screen
+        self.font = text_font
+        self.mycolor = mycolor
 
-        elif event.type == pygame.MOUSEBUTTONDOWN and MyTurn:
-            MousePressed = True
-            mouse_x, mouse_y = pygame.mouse.get_pos()
+        self.MousePressed = False
+        self.CircleAttached = False
+        self.target = None
+        self.original_x, self.original_y = None, None
+        self.running = True
 
-            if not CircleAttached:
-                for node in b.nodeList:
-                    if node.isPointInBounds(mouse_x, mouse_y):
-                        target = node
-                        original_x, original_y = target.pos
-                        CircleAttached = True
-                        break
+    def draw_text(self, text, text_col, x, y):
+        img = self.font.render(text, True, text_col)
+        self.screen.blit(img, (x, y))
 
-        elif event.type == pygame.MOUSEBUTTONUP:
-            SwappableCircles = list()
-            if CircleAttached:
-                for node in b.nodeList:
-                    mouse_x, mouse_y = pygame.mouse.get_pos()
-                    if node.isPointInBounds(mouse_x, mouse_y):
-                        SwappableCircles.append(node)
+    def get_circles_under_pointer(self, mx, my):
+        return [node for node in self.board.nodeList if node.isPointInBounds(mx, my)]
 
-                if len(SwappableCircles) == 2:
-                    if validMove(*SwappableCircles) and target.color == Mycolor:
-                        print(target.color)
-                        color = SwappableCircles[0].color
-                        SwappableCircles[0].color = SwappableCircles[1].color
-                        SwappableCircles[1].color = color
 
-            if target != None:
-                target.pos = (original_x, original_y)
-            MousePressed = False
-            target = None
-            CircleAttached = False
+    def handleEvent(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
 
-    if (MousePressed and target != None):
-        target.pos = (pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
 
-    # Update screen
-    screen.fill((0,0,0))  # Clear screen with white color
-    # Draw the circle
-    draw_text("Dupa",text_font, (255,255,255),50,50)
-    screen
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                print("down")
+                MousePressed = True
+                mouse_x, mouse_y = pygame.mouse.get_pos()
 
-    for node in b.nodeList:
-        node.draw(screen)
+                if not self.CircleAttached:
+                    for node in self.board.nodeList:
+                        if node.isPointInBounds(mouse_x, mouse_y) and node.color == self.mycolor:
+                            print("dupa", self.mycolor, " ", node.color)
+                            self.target = node
+                            self.original_x, self.original_y = self.target.pos
+                            self.CircleAttached = True
+                            break
 
-    pygame.display.flip()
+            elif event.type == pygame.MOUSEBUTTONUP:
+                nodes = self.get_circles_under_pointer(*pygame.mouse.get_pos())
+                if len(nodes) > 1 and Board.validMove(*nodes, self.mycolor):
+                    nodes[0].color, nodes[1].color = nodes[1].color, nodes[0].color
+                    move = (nodes[0].id, nodes[1].id)
 
-pygame.quit()
+                if self.target != None:
+                    self.target.pos = (self.original_x, self.original_y)
+                self.MousePressed = False
+                self.target = None
+                self.CircleAttached = False
+
+    def loop(self):
+        while self.running:
+            self.handleEvent()
+
+            if (self.CircleAttached):
+                self.target.pos = (pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+
+            self.render()
+
+    def __del__(self):
+
+        pygame.quit()
+
+    def render(self):
+        self.screen.fill((10, 10, 10))  # Clear screen with white color
+        # Draw the circle
+        self.draw_text("Dupa", (255, 255, 255), 50, 50)
+
+        for node in self.board.nodeList:
+            if node.color != self.mycolor:
+                node.draw(self.screen)
+
+        for node in self.board.nodeList:
+            if node.color == self.mycolor:
+                node.draw(self.screen)
+
+        pygame.display.flip()
+
+
+if __name__ == "__main__":
+    board = Board(DrawableNode)
+    board.generateBoard()
+    board.generatePawns(6)
+    gui = GameGui(6, 1, board)
+    gui.loop()

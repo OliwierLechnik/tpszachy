@@ -87,14 +87,29 @@ class Board:
                 node.setColor(c+1)
 
 
-
-
-
     def printBoard(self):
         for i in range(17):
             for j in range(25):
                 print(' ' if self.rawBoard[i,j] == 0 else f"{self.rawBoard[i,j].color}", end='')
             print('')
+    @staticmethod
+    def validMove(a, b, turn):
+        if 0 not in [a.color, b.color]:
+            return False
+        if b.color == 0:
+            a, b = b, a
+        if b.color != turn:
+            return False
+        if a in [n for n in b if n is not None and n.color == 0]:
+            return True
+        elif a in [b[i][i] for i in range(6) if
+                   b[i] is not None and b[i].color != 0 and b[i][i] is not None and b[i][i].color == 0]:
+            return True
+        else:
+            return False
+
+    def getNodesByIDs(self, ids):
+        return [n for n in self.nodeList if n.id in ids]
 
 if __name__ == "__main__":
     b = Board()

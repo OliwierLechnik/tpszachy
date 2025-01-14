@@ -1,6 +1,13 @@
 import socket
 import threading
 import sys
+from shared.Board import Board
+from DrawableNode import DrawableNode
+
+def actuallGameLoop():
+    b = Board(DrawableNode)
+    b.generateBoard()
+    b.generatePawns(6)
 
 def read_from_server(client_socket):
     while True:
