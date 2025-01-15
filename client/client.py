@@ -1,13 +1,15 @@
 import socket
 import threading
 import sys
-from shared.Board import Board
-from DrawableNode import DrawableNode
+# from shared.Board import Board
+# from DrawableNode import DrawableNode
 
-def actuallGameLoop():
-    b = Board(DrawableNode)
-    b.generateBoard()
-    b.generatePawns(6)
+msg_queue = None
+
+# def actuallGameLoop():
+#     b = Board(DrawableNode)
+#     b.generateBoard()
+#     b.generatePawns(6)
 
 def read_from_server(client_socket):
     while True:
@@ -17,6 +19,8 @@ def read_from_server(client_socket):
             if not response:
                 break  # Connection closed
             print("Server says:", response.decode('ascii'))
+            msg_queue.append()
+
         except Exception as e:
             print(f"Error while reading from server: {e}")
             break

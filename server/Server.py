@@ -9,6 +9,7 @@ class Server:
         self.unpaired_clients = dict()
 
     async def handle_client(self, reader, writer):
+        print("new client")
         client = (reader, writer)
         my_id = str(uuid.uuid4())
         self.unpaired_clients[my_id] = client
@@ -26,8 +27,11 @@ class Server:
                 message = data.decode().strip()
                 if message.startswith("CREATE:"):
                     try:
-                        if number := int(message[7:]) in [2,3,4,6]:
+                        if (number := int(message[7:])) in [2,3,4,6]:
                             Game([my_id, reader, writer], number)
+                            writer.write(b"Game Lobby Started.\n")
+                            await writer.drain()
+
                             print("transferred ownership of client to the game thread, exiting the handling thread")
                             return
                         else:
@@ -35,7 +39,7 @@ class Server:
                     except ValueError as e:
                         writer.write(b"NaN\n")
                 elif message.startswith("JOIN:"):
-                    print("attenpted join")
+                    print("attempted join")
                     id = None
                     try:
                         id = uuid.UUID(message[5:])

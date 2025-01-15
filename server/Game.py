@@ -14,13 +14,17 @@ class Game:
         self.b.generateBoard()
         Game.game_queue[self.uuid] = self
 
-        asyncio.create_task(self.start())
-
 
     def join(self, player):
         for p in self.players:
             p[2].write(bytes(f"[{player[0]} joined the lobby] \n", "utf-8"))
         self.players.append(player)
+
+        print(f"joined {len(self.players)}/{self.size}")
+        if len(self.players) == self.size:
+            print("Starting game")
+            Game.game_queue.pop(self.uuid)
+            asyncio.create_task(self.start())
 
 
 
@@ -37,9 +41,13 @@ class Game:
            p[2].write(b"Game Started.\n")
            await p[2].drain()
 
+        turn = 0
+        for i, r in enumerate(self.players):
+            r[2].write(bytes(f"{colors[i]}:{colors[turn]}", "utf-8"))
+            await r[2].drain()
+
         moves = list()
 
-        turn = 0
         while True:
             msg = str()
             try:
@@ -56,7 +64,7 @@ class Game:
             if msg == "End of turn.":
                 turn = (turn + 1) % self.size
                 for r in self.players:
-                    r[2].write(bytes(f"turn:{color[turn]}", "utf-8"))
+                    r[2].write(bytes(f"turn:{colors[turn]}", "utf-8"))
                     await r[2].drain()
                 continue
 
@@ -67,14 +75,14 @@ class Game:
                     *self.b.getNodesByIDs(
                         msg.split(";")
                     ),
-                    color[turn]
+                    colors[turn]
                 )
             except Exception as e:
                 print(f"Exception accured invalid ids, e.what() {e}")
 
             if not move:
-                self.players[turn].write(bytes(f"Invalid move.", "utf-8"))
-                await self.players[turn].drain()
+                self.players[turn][2].write(bytes(f"Invalid move.", "utf-8"))
+                await self.players[turn][2].drain()
                 continue
 
             moves.append(msg)
