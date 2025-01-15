@@ -63,7 +63,7 @@ class GameGui:
     def setTurn(self, turn):
         self.turn = turn
 
-    def CurrentColor(self):
+    def CurrentColor(self, ColorID):
         colors = [
             (191, 191, 191),
             (254, 126, 170),
@@ -73,7 +73,7 @@ class GameGui:
             (185, 135, 165),
             (195, 13, 119)
         ]
-        return colors[self.turn]
+        return colors[ColorID]
 
     def handleEvent(self):
         msg = None
@@ -101,8 +101,7 @@ class GameGui:
                 if len(nodes) > 1 and Board.validMove(*nodes, self.mycolor):
                     # nodes[0].color, nodes[1].color = nodes[1].color, nodes[0].color
                     # move = (nodes[0].id, nodes[1].id)
-                    msg = f"{nodes[0].id};{nodes[1].id}"
-                    self.moveSound.play()
+                    self.VineBoom.play()
 
 
 
