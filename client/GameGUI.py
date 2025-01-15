@@ -1,5 +1,9 @@
+import os
+
 import pygame
 import math
+
+from pygame.examples.moveit import HEIGHT, WIDTH
 
 from shared.Board import Board
 from DrawableNode import DrawableNode
@@ -14,6 +18,18 @@ class GameGui:
         text_font = pygame.font.SysFont(None, 30)
         pygame.init()
 
+        #sound setup
+        pygame.mixer.init()
+        path = os.path.join("SoundEffects", "castle.wav")
+        self.moveSound = pygame.mixer.Sound(path)
+        path = os.path.join("SoundEffects", "Vine_Boom.wav")
+        self.VineBoom = pygame.mixer.Sound(path)
+
+        #avatar setup
+        path = os.path.join("SoundEffects", "UserAvatar.png")
+        self.Avatar = pygame.image.load(path)
+        self.Avatar = pygame.transform.scale(self.Avatar, (70, 70))
+
         # Screen setup
         WIDTH, HEIGHT = 800, 600
         screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -23,7 +39,7 @@ class GameGui:
         board.origin.setpos(15, 5, WIDTH//2, HEIGHT//2)
         board.killAllOrphans()
 
-        self.turn = -1
+        self.turn = 1
 
         self.board = board
         self.screen = screen
@@ -46,6 +62,18 @@ class GameGui:
 
     def setTurn(self, turn):
         self.turn = turn
+
+    def CurrentColor(self):
+        colors = [
+            (191, 191, 191),
+            (254, 126, 170),
+            (157, 214, 231),
+            (248, 230, 189),
+            (184, 213, 154),
+            (185, 135, 165),
+            (195, 13, 119)
+        ]
+        return colors[self.turn]
 
     def handleEvent(self):
         msg = None
@@ -74,6 +102,10 @@ class GameGui:
                     nodes[0].color, nodes[1].color = nodes[1].color, nodes[0].color
                     move = (nodes[0].id, nodes[1].id)
                     msg = f"{nodes[0].id}:{nodes[1].id}"
+                    self.moveSound.play()
+
+
+
 
 
                 if self.target != None:
@@ -100,9 +132,13 @@ class GameGui:
         pygame.quit()
 
     def render(self):
-        self.screen.fill((10, 10, 10))  # Clear screen with white color
-        # Draw the circle
-        self.draw_text("Dupa", (255, 255, 255), 50, 50)
+        self.screen.fill((255, 250, 250))  # Clear screen with white color
+
+
+
+        # Draw turn info
+        self.draw_text("Current Turn", self.CurrentColor(), 50, 50)
+        self.draw_text("Your Colour ", self.mycolor, 50, 80)
 
         for node in self.board.nodeList:
             if node.color != self.mycolor:
@@ -120,5 +156,5 @@ if __name__ == "__main__":
     board.generateBoard()
     board.generatePawns(6)
     gui = GameGui(6, 1, board)
-    gui.setTurn(2)
+    gui.setTurn(1)
     gui.loop()

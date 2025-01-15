@@ -15,13 +15,13 @@ class DrawableNode(Node):
 
     def draw(self,screen, coloured = True):
         colors = [
-            (69,69,69),
-            (255,0,0),
-            (0,255,0),
-            (0,0,255),
-            (255,255,0),
-            (0,255,255),
-            (255,0,255)
+            (191, 191, 191),
+            (254, 126, 170),
+            (157, 214, 231),
+            (248, 230, 189),
+            (184, 213, 154),
+            (185, 135, 165),
+            (195, 13, 119)
         ]
         color = colors[self.color]
         pygame.draw.circle(screen, color, self.pos, self.radius)
