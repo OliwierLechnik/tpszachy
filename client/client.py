@@ -1,15 +1,33 @@
 import socket
 import threading
 import sys
+import select
 # from shared.Board import Board
 # from DrawableNode import DrawableNode
 
-msg_queue = None
+def recv_with_timeout(client_socket, timeout_ms):
+    """
+    Receive data from a socket with a specified timeout.
 
-# def actuallGameLoop():
-#     b = Board(DrawableNode)
-#     b.generateBoard()
-#     b.generatePawns(6)
+    Args:
+        client_socket (socket.socket): The socket to receive data from.
+        timeout_ms (int): Timeout in milliseconds.
+
+    Returns:
+        bytes or None: The received data, or None if no data is received within the timeout.
+    """
+    timeout_sec = timeout_ms / 1000.0  # Convert milliseconds to seconds
+    ready, _, _ = select.select([client_socket], [], [], timeout_sec)
+    if ready:
+        return client_socket.recv(1024)  # Adjust the buffer size as needed
+    return None
+def actuallGameLoop(socket, mycolor, players):
+    b = Board(DrawableNode)
+    b.generateBoard()
+    b.generatePawns(6)
+
+
+
 
 def read_from_server(client_socket):
     while True:
@@ -18,8 +36,9 @@ def read_from_server(client_socket):
             response = client_socket.recv(1024)
             if not response:
                 break  # Connection closed
+            if response.decode('ascii') == "Game Started.":
+
             print("Server says:", response.decode('ascii'))
-            msg_queue.append()
 
         except Exception as e:
             print(f"Error while reading from server: {e}")

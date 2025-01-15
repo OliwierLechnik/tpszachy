@@ -37,34 +37,23 @@ class Game:
             6: (0, 1, 2, 3, 4, 5)
         }[self.size]
 
-        for p in self.players:
-           p[2].write(b"Game Started.\n")
-           await p[2].drain()
 
         turn = 0
         for i, r in enumerate(self.players):
+            p[2].write(b"Game Started.")
             r[2].write(bytes(f"{colors[i]}:{colors[turn]}", "utf-8"))
             await r[2].drain()
 
         moves = list()
 
         while True:
-            msg = str()
-            try:
-                data = await asyncio.wait_for(self.players[turn][1].read(100), timeout=0.1)
-                if data:
-                    msg: str = data.decode().strip()
-
-            except asyncio.TimeoutError:
-                # If no data is available, skip and do other tasks
-                pass
-            except Exception as e:
-                print(f"Error: {e}")
+            data = self.players[turn][1].read(100)
+            msg = data.strip()
 
             if msg == "End of turn.":
                 turn = (turn + 1) % self.size
                 for r in self.players:
-                    r[2].write(bytes(f"turn:{colors[turn]}", "utf-8"))
+                    r[2].write(bytes(f"TURN:{colors[turn]}", "utf-8"))
                     await r[2].drain()
                 continue
 
@@ -92,7 +81,7 @@ class Game:
 
 
             for r in self.players:
-                r[2].write(bytes(f"{msg}", "utf-8"))
+                r[2].write(bytes(f"MOVE:{msg}", "utf-8"))
                 await r[2].drain()
 
 
