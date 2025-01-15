@@ -20,13 +20,13 @@ class GameGui:
 
         #sound setup
         pygame.mixer.init()
-        path = os.path.join("SoundEffects", "castle.wav")
+        path = os.path.join("client", "SoundEffects", "castle.wav")
         self.moveSound = pygame.mixer.Sound(path)
-        path = os.path.join("SoundEffects", "Vine_Boom.wav")
+        path = os.path.join("client", "SoundEffects", "Vine_Boom.wav")
         self.VineBoom = pygame.mixer.Sound(path)
 
         #avatar setup
-        path = os.path.join("SoundEffects", "UserAvatar.png")
+        path = os.path.join("client", "SoundEffects", "UserAvatar.png")
         self.Avatar = pygame.image.load(path)
         self.Avatar = pygame.transform.scale(self.Avatar, (70, 70))
 
@@ -99,9 +99,9 @@ class GameGui:
             elif event.type == pygame.MOUSEBUTTONUP:
                 nodes = self.get_circles_under_pointer(*pygame.mouse.get_pos())
                 if len(nodes) > 1 and Board.validMove(*nodes, self.mycolor):
-                    nodes[0].color, nodes[1].color = nodes[1].color, nodes[0].color
-                    move = (nodes[0].id, nodes[1].id)
-                    msg = f"{nodes[0].id}:{nodes[1].id}"
+                    # nodes[0].color, nodes[1].color = nodes[1].color, nodes[0].color
+                    # move = (nodes[0].id, nodes[1].id)
+                    msg = f"{nodes[0].id};{nodes[1].id}"
                     self.moveSound.play()
 
 

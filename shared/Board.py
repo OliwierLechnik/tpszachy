@@ -94,6 +94,7 @@ class Board:
             print('')
     @staticmethod
     def validMove(a, b, turn):
+        print(f"Valid Move {a.color} {b.color} {turn}")
         if 0 not in [a.color, b.color]:
             return False
         if b.color == 0:

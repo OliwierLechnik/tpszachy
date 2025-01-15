@@ -12,6 +12,7 @@ class Game:
         self.uuid = uuid.uuid4()
         self.b = Board()
         self.b.generateBoard()
+        self.b.generatePawns(size)
         Game.game_queue[self.uuid] = self
 
 
@@ -30,25 +31,29 @@ class Game:
 
     async def start(self):
 
-        colors = {
+        colors = [i + 1 for i in {
             2: (2,5),
             3: (0, 2, 4),
             4: (0, 1, 3, 4),
             6: (0, 1, 2, 3, 4, 5)
-        }[self.size]
+        }[self.size]]
+
 
 
         turn = 0
         for i, r in enumerate(self.players):
-            p[2].write(b"Game Started.")
-            r[2].write(bytes(f"{colors[i]}:{colors[turn]}", "utf-8"))
+            r[2].write(b"Game Started.")
+            await r[2].drain()
+            r[2].write(bytes(f"{len(self.players)}:{colors[i]}:{colors[turn]}", "utf-8"))
             await r[2].drain()
 
         moves = list()
 
         while True:
-            data = self.players[turn][1].read(100)
-            msg = data.strip()
+            data = await self.players[turn][1].read(100)
+            msg = data.decode().strip()
+
+            print(f"received {msg} from {colors[turn]}")
 
             if msg == "End of turn.":
                 turn = (turn + 1) % self.size
@@ -62,26 +67,34 @@ class Game:
             try:
                 move = self.b.validMove(
                     *self.b.getNodesByIDs(
-                        msg.split(";")
+                        [int(i) for i in msg.split(";")]
                     ),
                     colors[turn]
                 )
             except Exception as e:
                 print(f"Exception accured invalid ids, e.what() {e}")
 
+            print(f"move {move}")
             if not move:
-                self.players[turn][2].write(bytes(f"Invalid move.", "utf-8"))
-                await self.players[turn][2].drain()
+                # self.players[turn][2].write(bytes(f"Invalid move.", "utf-8"))
+                # await self.players[turn][2].drain()
                 continue
 
             moves.append(msg)
 
-            a, b = self.b.getNodesByIDs(msg.split(";"))
+            a, b = self.b.getNodesByIDs(
+                        [int(i) for i in msg.split(";")]
+                    )
             a.color, b.color = b.color, a.color
 
+            turn = (turn + 1) % self.size
 
             for r in self.players:
                 r[2].write(bytes(f"MOVE:{msg}", "utf-8"))
+                await r[2].drain()
+
+            for r in self.players:
+                r[2].write(bytes(f"TURN:{colors[turn]}", "utf-8"))
                 await r[2].drain()
 
 

@@ -2,8 +2,9 @@ import socket
 import threading
 import sys
 import select
-# from shared.Board import Board
-# from DrawableNode import DrawableNode
+from shared.Board import Board
+from DrawableNode import DrawableNode
+from GameGUI import GameGui
 
 def recv_with_timeout(client_socket, timeout_ms):
     """
@@ -21,28 +22,67 @@ def recv_with_timeout(client_socket, timeout_ms):
     if ready:
         return client_socket.recv(1024)  # Adjust the buffer size as needed
     return None
-def actuallGameLoop(socket, mycolor, players):
-    b = Board(DrawableNode)
-    b.generateBoard()
-    b.generatePawns(6)
+def actuallGameLoop(socket, mycolor, turncolor, players):
+    board = Board(DrawableNode)
+    board.generateBoard()
+    board.generatePawns(players)
+
+    gui = GameGui(players, mycolor, board)
+    gui.setTurn(turncolor)
+
+    while gui.running:
+        msg = gui.handleEvent()
+        if msg is not None:
+            print(msg)
+
+        response = recv_with_timeout(socket, 0.001)
+        if response is not None:
+            print(response.decode())
+            k, v = response.decode().split(":")
+            if k == "TURN":
+                gui.setTurn(int(v[0]))
+            elif k == "MOVE":
+                a, b = board.getNodesByIDs((int(v.split(";")[0]), int(v.split(";")[1])))
+                a.color, b.color = b.color, a.color
+
+        if gui.turn == gui.mycolor and msg is not None:
+            print(f"move ({msg})")
+            socket.send(f"{msg}".encode())
+
+        gui.guiLogic()
+
+        gui.render()
+
+
+
 
 
 
 
 def read_from_server(client_socket):
     while True:
-        try:
+        # try:
             # Receive data from the server
-            response = client_socket.recv(1024)
-            if not response:
-                break  # Connection closed
-            if response.decode('ascii') == "Game Started.":
+        response = client_socket.recv(1024)
+        if not response:
+            break  # Connection closed
 
-            print("Server says:", response.decode('ascii'))
+        print("Server says:", response.decode('ascii'))
 
-        except Exception as e:
-            print(f"Error while reading from server: {e}")
-            break
+
+        if response.decode('ascii') == "Game Started.":
+
+            msg = client_socket.recv(1024).decode('ascii')
+            print("Server says:", msg)
+            players, mycolor, turncolor = [int(i) for i in msg.split(":")]
+            print(players, mycolor, turncolor)
+            actuallGameLoop(client_socket,mycolor,turncolor,players)
+
+
+
+        # except Exception as e:
+        #     print(f"Error while reading from server: {e}")
+        #     break
 
 def write_to_server(client_socket):
     while True:
