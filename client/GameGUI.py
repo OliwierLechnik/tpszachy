@@ -155,7 +155,7 @@ class GameGui:
             elif event.type == pygame.KEYUP:
 
                 if event.key - 48 > 0 and event.key - 48 < 10:
-                    self.setActiveEmote(event.key-48)
+                    msg = f"EMOTE:{event.key - 48}"
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 print("down")
