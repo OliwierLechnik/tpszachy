@@ -38,7 +38,7 @@ def read_from_server(client_socket):
                 break  # Connection closed
             if response.decode('ascii') == "Game Started.":
 
-            print("Server says:", response.decode('ascii'))
+                print("Server says:", response.decode('ascii'))
 
         except Exception as e:
             print(f"Error while reading from server: {e}")
