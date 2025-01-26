@@ -1,7 +1,8 @@
 import json
 
-from shared.Node import Node
+from Board import Node
 import numpy as np
+from random import Random
 
 class Board:
     def __init__(self, nodeImplementation = Node):
@@ -53,13 +54,16 @@ class Board:
                         toAdd.pop(1, None)
                         toAdd.pop(5, None)
                     for k, v in toAdd.items():
-                        rawBoard[i,j][k] = rawBoard[v[0], v[1]] if rawBoard[v[0], v[1]] != 0 else None
+                        if n := rawBoard[v[0], v[1]]:
+                            n.on_graph = True
+                            rawBoard[i,j][k] = n
         self.rawBoard = rawBoard
         self.origin = rawBoard[8,12]
         self.nodeList = nodeList
+        self.killAllOrphans()
 
     def killAllOrphans(self):  # requires to use setpos first
-        self.nodeList = [node for node in self.nodeList if hasattr(node, "pos")]
+        self.nodeList = [node for node in self.nodeList if node.on_graph]
 
     def generatePawns(self, n):  # n - number of players
         if n not in [2,3,4,6]:
@@ -85,6 +89,23 @@ class Board:
 
             for node in colorOrigin.nodes:
                 node.setColor(c+1)
+
+
+    def generatePawnsRandom(self, n):
+        Random.seed(69420)
+        colors = {
+            2: (2, 5),
+            3: (0, 2, 4),
+            4: (0, 1, 3, 4),
+            6: (0, 1, 2, 3, 4, 5)
+        }[n]
+        for c in colors:
+            for _ in range(10):
+                node = Random.choice(self.nodeList)
+                while (node := Random.choice(self.nodeList)).color != 0:
+                    node.color = c+1
+
+
 
 
     def printBoard(self):

@@ -1,7 +1,12 @@
 import asyncio
 import uuid
 import time
-from shared.Board import Board
+
+import threading
+
+from Board import Board
+
+
 
 class Game:
 
@@ -13,12 +18,13 @@ class Game:
         self.b = Board()
         self.b.generateBoard()
         self.b.generatePawns(size)
+        self.variant = 1
         Game.game_queue[self.uuid] = self
 
 
     def join(self, player):
         for p in self.players:
-            p[2].write(bytes(f"[{player[0]} joined the lobby] \n", "utf-8"))
+            p[1].write(bytes(f"[joined the lobby] \n", "utf-8"))
         self.players.append(player)
 
         print(f"joined {len(self.players)}/{self.size}")
@@ -26,8 +32,6 @@ class Game:
             print("Starting game")
             Game.game_queue.pop(self.uuid)
             asyncio.create_task(self.start())
-
-
 
     async def start(self):
 
@@ -42,15 +46,13 @@ class Game:
 
         turn = 0
         for i, r in enumerate(self.players):
-            r[2].write(b"Game Started.")
-            await r[2].drain()
-            r[2].write(bytes(f"{len(self.players)}:{colors[i]}:{colors[turn]}", "utf-8"))
-            await r[2].drain()
+            r[1].write(bytes(f"Game Started:{len(self.players)}:{colors[i]}:{colors[turn]}", "utf-8"))
+            await r[1].drain()
 
         moves = list()
 
         while True:
-            data = await self.players[turn][1].read(100)
+            data = await self.players[turn][0].read(100)
             msg = data.decode().strip()
 
             print(f"received {msg} from {colors[turn]}")
@@ -58,8 +60,8 @@ class Game:
             if msg == "End of turn.":
                 turn = (turn + 1) % self.size
                 for r in self.players:
-                    r[2].write(bytes(f"TURN:{colors[turn]}", "utf-8"))
-                    await r[2].drain()
+                    r[1].write(bytes(f"TURN:{colors[turn]}", "utf-8"))
+                    await r[1].drain()
                 continue
 
 
@@ -90,12 +92,9 @@ class Game:
             turn = (turn + 1) % self.size
 
             for r in self.players:
-                r[2].write(bytes(f"MOVE:{msg}", "utf-8"))
-                await r[2].drain()
+                r[1].write(bytes(f"MOVE:{msg};{colors[turn]}", "utf-8"))
+                await r[1].drain()
 
-            for r in self.players:
-                r[2].write(bytes(f"TURN:{colors[turn]}", "utf-8"))
-                await r[2].drain()
 
 
 

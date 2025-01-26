@@ -1,6 +1,6 @@
 import pygame
 
-from shared.Node import Node
+from Node import Node
 import math
 class DrawableNode(Node):
 

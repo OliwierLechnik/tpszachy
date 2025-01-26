@@ -16,10 +16,15 @@ class Node:
         Node.id_counter += 1
 
         self.color = 0
+        self.preffered_color = None
+        self.on_graph = False
 
 
     def setColor(self, color):
         self.color = color
+
+    def setPrefferedColor(self, color):
+        self.preffered_color = color
 
 
     def __getitem__(self, index):
@@ -34,11 +39,3 @@ class Node:
 
     def __delitem__(self, index):
         self.nodes[index] = None
-
-def validMove(a,b):
-    if a in b:
-        return True
-    elif a in [b[i][i] for i in range(6) if b[i] is not None and b[i].color != 0]:
-        return True
-    else:
-        return False

@@ -5,7 +5,7 @@ import math
 
 from pygame.examples.moveit import HEIGHT, WIDTH
 
-from shared.Board import Board
+from Board import Board
 from DrawableNode import DrawableNode
 
 
@@ -101,6 +101,7 @@ class GameGui:
                 if len(nodes) > 1 and Board.validMove(*nodes, self.mycolor):
                     # nodes[0].color, nodes[1].color = nodes[1].color, nodes[0].color
                     # move = (nodes[0].id, nodes[1].id)
+                    msg = f"{nodes[0].id};{nodes[1].id}"
                     self.VineBoom.play()
 
 
@@ -136,8 +137,8 @@ class GameGui:
 
 
         # Draw turn info
-        self.draw_text("Current Turn", self.CurrentColor(), 50, 50)
-        self.draw_text("Your Colour ", self.mycolor, 50, 80)
+        self.draw_text("Current Turn", self.CurrentColor(self.turn), 50, 50)
+        self.draw_text("Your Colour ", self.CurrentColor(self.mycolor), 50, 80)
 
         for node in self.board.nodeList:
             if node.color != self.mycolor:

@@ -1,8 +1,11 @@
 import socket
 import threading
 import sys
+
+sys.path.append('../shared')
+
 import select
-from shared.Board import Board
+from Board import Board
 from DrawableNode import DrawableNode
 from GameGUI import GameGui
 
@@ -30,6 +33,8 @@ def actuallGameLoop(socket, mycolor, turncolor, players):
     gui = GameGui(players, mycolor, board)
     gui.setTurn(turncolor)
 
+    print("starting game loop")
+
     while gui.running:
         msg = gui.handleEvent()
         if msg is not None:
@@ -39,11 +44,10 @@ def actuallGameLoop(socket, mycolor, turncolor, players):
         if response is not None:
             print(response.decode())
             k, v = response.decode().split(":")
-            if k == "TURN":
-                gui.setTurn(int(v[0]))
-            elif k == "MOVE":
+            if k == "MOVE":
                 a, b = board.getNodesByIDs((int(v.split(";")[0]), int(v.split(";")[1])))
                 a.color, b.color = b.color, a.color
+                gui.setTurn(int(v.split(";")[2]))
 
         if gui.turn == gui.mycolor and msg is not None:
             print(f"move ({msg})")
@@ -53,6 +57,7 @@ def actuallGameLoop(socket, mycolor, turncolor, players):
 
         gui.render()
 
+    print("exiting game")
 
 
 
@@ -67,16 +72,15 @@ def read_from_server(client_socket):
         if not response:
             break  # Connection closed
 
-        print("Server says:", response.decode('ascii'))
+        print("Server says:", response.decode('utf-8'))
 
 
-        if response.decode('ascii') == "Game Started.":
+        if (msg := response.decode('utf-8')).startswith("Game Started:"):
+            print("Starting game.")
 
-            msg = client_socket.recv(1024).decode('ascii')
-            print("Server says:", msg)
-            players, mycolor, turncolor = [int(i) for i in msg.split(":")]
+            players, mycolor, turncolor = [int(i) for i in msg.split(":")[1:]]
             print(players, mycolor, turncolor)
-            actuallGameLoop(client_socket,mycolor,turncolor,players)
+            actuallGameLoop(client_socket, mycolor, turncolor, players)
 
 
 
