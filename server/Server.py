@@ -47,10 +47,10 @@ class Server:
                     'reader': reader,
                     'writer': writer
                 }
-                pauser.clear()
-                pauser.wait()
+                # pauser.clear()
+                # pauser.wait()
                 msg = await self.command_handler.handle(message, context)
-                pauser.set()
+                # pauser.set()
                 if msg in ["JOINED", "CREATED"]:
                     print(msg)
                     return

@@ -1,6 +1,6 @@
 import json
 
-from Board import Node
+from Node import Node
 import numpy as np
 from random import Random
 

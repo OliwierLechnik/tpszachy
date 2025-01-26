@@ -48,8 +48,10 @@ def actuallGameLoop(socket, mycolor, turncolor, players):
                 a, b = board.getNodesByIDs((int(v.split(";")[0]), int(v.split(";")[1])))
                 a.color, b.color = b.color, a.color
                 gui.setTurn(int(v.split(";")[2]))
+            if k == "EMOTE":
+                gui.setActiveEmote(int(v))
 
-        if gui.turn == gui.mycolor and msg is not None:
+        if msg is not None:
             print(f"move ({msg})")
             socket.send(f"{msg}".encode())
 

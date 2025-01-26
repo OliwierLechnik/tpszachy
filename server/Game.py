@@ -6,13 +6,13 @@ import threading
 
 from Board import Board
 
-
+from Player import Player
 
 class Game:
 
     game_queue = dict()
     def __init__(self, host, size=6):
-        self.players = [host]
+        self.players = [Player(*host)]
         self.size = size
         self.uuid = uuid.uuid4()
         self.b = Board()
@@ -22,16 +22,14 @@ class Game:
         Game.game_queue[self.uuid] = self
 
 
-    def join(self, player):
-        for p in self.players:
-            p[1].write(bytes(f"[joined the lobby] \n", "utf-8"))
-        self.players.append(player)
+    async def join(self, player):
+        self.players.append(Player(*player))
 
         print(f"joined {len(self.players)}/{self.size}")
         if len(self.players) == self.size:
             print("Starting game")
             Game.game_queue.pop(self.uuid)
-            asyncio.create_task(self.start())
+            await self.start()
 
     async def start(self):
 
@@ -46,30 +44,34 @@ class Game:
 
         turn = 0
         for i, r in enumerate(self.players):
-            r[1].write(bytes(f"Game Started:{len(self.players)}:{colors[i]}:{colors[turn]}", "utf-8"))
-            await r[1].drain()
+            await r.applyMsg(f"Game Started:{len(self.players)}:{colors[i]}:{colors[turn]}")
 
         moves = list()
 
         while True:
-            data = await self.players[turn][0].read(100)
-            msg = data.decode().strip()
+            response = await asyncio.gather(
+                *[player.getMsg() for player in self.players]
+            )
 
-            print(f"received {msg} from {colors[turn]}")
+            # print(response)
 
-            if msg == "End of turn.":
-                turn = (turn + 1) % self.size
-                for r in self.players:
-                    r[1].write(bytes(f"TURN:{colors[turn]}", "utf-8"))
-                    await r[1].drain()
+            for s in response:
+                if s and s.startswith("EMOTE:"):
+                    for r in self.players:
+                        await r.applyMsg(s)
+
+            msg = response[turn]
+
+            if not msg or not msg.startswith("MOVE:"):
                 continue
 
+            print(f"received {msg} from {colors[turn]}")
 
             move = False
             try:
                 move = self.b.validMove(
                     *self.b.getNodesByIDs(
-                        [int(i) for i in msg.split(";")]
+                        [int(i) for i in msg[5:].split(";")]
                     ),
                     colors[turn]
                 )
@@ -85,15 +87,16 @@ class Game:
             moves.append(msg)
 
             a, b = self.b.getNodesByIDs(
-                        [int(i) for i in msg.split(";")]
+                        [int(i) for i in msg[5:].split(";")]
                     )
             a.color, b.color = b.color, a.color
 
             turn = (turn + 1) % self.size
 
             for r in self.players:
-                r[1].write(bytes(f"MOVE:{msg};{colors[turn]}", "utf-8"))
-                await r[1].drain()
+                await r.applyMsg(f"{msg};{colors[turn]}")
+
+            await asyncio.sleep(0.01)
 
 
 

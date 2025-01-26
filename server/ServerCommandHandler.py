@@ -36,7 +36,7 @@ class JoinCommandHandler(CommandHandler):
                 id = uuid.UUID(command[5:])
                 if id in Game.game_queue.keys():
                     try:
-                        Game.game_queue.get(id).join([context['reader'], context['writer']])
+                        await Game.game_queue.get(id).join([context['reader'], context['writer']])
                         context['writer'].write(b"Joined.\n")
                         await context['writer'].drain()
                         return  "JOINED"# Command handled, exit chain

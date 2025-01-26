@@ -6,7 +6,7 @@ import math
 
 from pygame.examples.moveit import HEIGHT, WIDTH
 
-from shared.Board import Board
+from Board import Board
 from DrawableNode import DrawableNode
 
 
@@ -53,39 +53,39 @@ class GameGui:
 
     def LoadEmotes(self):
 
-        path = os.path.join("EmoteFiles", "Hu_Tao.png")
+        path = os.path.join("client/EmoteFiles", "Hu_Tao.png")
         self.Tao = pygame.transform.scale(pygame.image.load(path), (400, 400))
 
-        path = os.path.join("EmoteFiles", "Skull.png")
+        path = os.path.join("client/EmoteFiles", "Skull.png")
         self.Skull = pygame.transform.scale(pygame.image.load(path), (400, 400))
 
-        path = os.path.join("EmoteFiles", "headEmpty.png")
+        path = os.path.join("client/EmoteFiles", "headEmpty.png")
         self.HeadEmpty = pygame.transform.scale(pygame.image.load(path), (400, 400))
 
-        path = os.path.join("EmoteFiles", "QiqiFall.png")
+        path = os.path.join("client/EmoteFiles", "QiqiFall.png")
         self.Qiqi = pygame.transform.scale(pygame.image.load(path), (400, 400))
 
-        path = os.path.join("EmoteFiles", "Megamind.png")
+        path = os.path.join("client/EmoteFiles", "Megamind.png")
         self.Megamind = pygame.transform.scale(pygame.image.load(path), (400, 400))
 
-        path = os.path.join("EmoteFiles", "cringe.png")
+        path = os.path.join("client/EmoteFiles", "cringe.png")
         self.Cringe = pygame.transform.scale(pygame.image.load(path), (400, 400))
 
-        path = os.path.join("EmoteFiles", "autismo.png")
+        path = os.path.join("client/EmoteFiles", "autismo.png")
         self.Autismo = pygame.transform.scale(pygame.image.load(path), (400, 400))
 
-        path = os.path.join("EmoteFiles", "DeepFry.png")
+        path = os.path.join("client/EmoteFiles", "DeepFry.png")
         self.DeepFry = pygame.transform.scale(pygame.image.load(path), (400, 400))
 
     def LoadSounds(self):
         pygame.mixer.init()
 
-        self.MoveSound = pygame.mixer.Sound(os.path.join("EmoteFiles", "castle.wav"))
-        self.VineBoom = pygame.mixer.Sound(os.path.join("EmoteFiles", "Vine_Boom.wav"))
-        self.Akira = pygame.mixer.Sound(os.path.join("EmoteFiles", "Akira.wav"))
-        self.Ping = pygame.mixer.Sound(os.path.join("EmoteFiles", "Ping.wav"))
-        self.YodaDeath = pygame.mixer.Sound(os.path.join("EmoteFiles", "YodaDeath.wav"))
-        self.Boom = pygame.mixer.Sound(os.path.join("EmoteFiles", "Boom.wav"))
+        self.MoveSound = pygame.mixer.Sound(os.path.join("client/EmoteFiles", "castle.wav"))
+        self.VineBoom = pygame.mixer.Sound(os.path.join("client/EmoteFiles", "Vine_Boom.wav"))
+        self.Akira = pygame.mixer.Sound(os.path.join("client/EmoteFiles", "Akira.wav"))
+        self.Ping = pygame.mixer.Sound(os.path.join("client/EmoteFiles", "Ping.wav"))
+        self.YodaDeath = pygame.mixer.Sound(os.path.join("client/EmoteFiles", "YodaDeath.wav"))
+        self.Boom = pygame.mixer.Sound(os.path.join("client/EmoteFiles", "Boom.wav"))
 
     def getEmote(self, EmoteID):
         EmoteID = EmoteID - 1   # tutaj jest -1 bo do getEmote wrzucam to jaki przycisk był kliknięty a nie od razu id emotki
@@ -106,16 +106,16 @@ class GameGui:
     def setActiveEmote(self,EmoteID):
         self.activeEmote = self.getEmote(EmoteID)[0]
         self.activeSound = self.getEmote(EmoteID)[1]
-        self.activeEmoteOp = 255
+        self.activeEmoteOp = 350
 
     def playEmote(self):
 
-        if self.activeEmoteOp == 255:
+        if self.activeEmoteOp == 350:
             pygame.mixer.Sound.play(self.activeSound)
 
-        self.activeEmote.set_alpha(self.activeEmoteOp)
+        self.activeEmote.set_alpha(255 if self.activeEmoteOp > 255 else self.activeEmoteOp)
         self.screen.blit(self.activeEmote, (200, 100))
-        self.activeEmoteOp = self.activeEmoteOp  - 0.8
+        self.activeEmoteOp = self.activeEmoteOp  - 1
 
         if self.activeEmoteOp  == 0:
             self.activeEmote, self.activeSound = None, None
@@ -156,6 +156,7 @@ class GameGui:
 
                 if event.key - 48 > 0 and event.key - 48 < 10:
                     msg = f"EMOTE:{event.key - 48}"
+                    # self.setActiveEmote(event.key - 48)
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 print("down")
@@ -174,9 +175,9 @@ class GameGui:
             elif event.type == pygame.MOUSEBUTTONUP:
                 nodes = self.get_circles_under_pointer(*pygame.mouse.get_pos())
                 if len(nodes) > 1 and Board.validMove(*nodes, self.mycolor):
-                    nodes[0].color, nodes[1].color = nodes[1].color, nodes[0].color
-                    move = (nodes[0].id, nodes[1].id)
-                    msg = f"{nodes[0].id}:{nodes[1].id}"
+                    # nodes[0].color, nodes[1].color = nodes[1].color, nodes[0].color
+                    # move = (nodes[0].id, nodes[1].id)
+                    msg = f"MOVE:{nodes[0].id};{nodes[1].id}"
                     self.MoveSound.play()
 
 
