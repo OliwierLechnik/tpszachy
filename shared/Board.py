@@ -1,6 +1,6 @@
 import json
 
-from Node import Node
+from shared.Node import Node
 import numpy as np
 from random import Random
 
