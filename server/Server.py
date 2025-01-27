@@ -29,7 +29,7 @@ class Server:
         writer.write(b"Connected to the server.\n"
                      b"Type `LIST` to list all open lobbies.\n"
                      b"Type `GET_ID` to get your connection ID.\n"
-                     b"Type 'CREATE:<lobby_size>' to host a lobby of size <lobby_size>.\n"
+                     b"Type 'CREATE:<lobby_size>:<bot_amount>' to host a lobby of size <lobby_size>.\n"
                      b"Type `JOIN:<lobby_id>` to join an open lobby.\n")
         await writer.drain()
 

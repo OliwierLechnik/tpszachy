@@ -24,7 +24,12 @@ class DrawableNode(Node):
             (195, 13, 119)
         ]
         color = colors[self.color]
-        pygame.draw.circle(screen, color, self.pos, self.radius)
+        if self.preffered_color:
+            pref_color = colors[self.preffered_color]
+            pygame.draw.circle(screen, pref_color, self.pos, self.radius)
+            pygame.draw.circle(screen, color, self.pos, self.radius-3)
+        else:
+            pygame.draw.circle(screen, color, self.pos, self.radius)
 
 
     def setpos(self, radius, margin, x, y):

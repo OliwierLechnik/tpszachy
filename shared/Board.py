@@ -1,6 +1,6 @@
 import json
 
-from shared.Node import Node
+from Node import Node
 import numpy as np
 from random import Random
 
@@ -62,6 +62,9 @@ class Board:
         self.nodeList = nodeList
         self.killAllOrphans()
 
+    def getList(self):
+        return self.nodeList
+
     def killAllOrphans(self):  # requires to use setpos first
         self.nodeList = [node for node in self.nodeList if node.on_graph]
 
@@ -89,6 +92,17 @@ class Board:
 
             for node in colorOrigin.nodes:
                 node.setColor(c+1)
+
+            e = add_c_6(c+3)
+            d = add_c_6(e-1)
+            colorOrigin = self.origin[e][e][e][d][d][d]
+            colorOrigin.setPrefferedColor(c+1)
+
+            for i in [0,2,4]:
+                colorOrigin[add_c_6(e+i)][add_c_6(d+i)].setPrefferedColor(c+1)
+
+            for node in colorOrigin.nodes:
+                node.setPrefferedColor(c+1)
 
 
     def generatePawnsRandom(self, n):
@@ -132,6 +146,7 @@ class Board:
 
     def getNodesByIDs(self, ids):
         return [n for n in self.nodeList if n.id in ids]
+
 
 if __name__ == "__main__":
     b = Board()

@@ -15,9 +15,12 @@ class CreateCommandHandler(CommandHandler):
     async def handle(self, command, context):
         if command.startswith("CREATE:"):
             try:
-                number = int(command[7:])
-                if number in [2, 3, 4, 6]:
-                    Game([context['reader'], context['writer']], number)
+                _, a, b = command.split(":")
+                number = int(a)
+                bot = int(b)
+                if number in [2, 3, 4, 6] and number > bot and bot >= 0:
+                    game = Game([context['reader'], context['writer']], number, bot)
+                    await game.check_for_start()
                     context['writer'].write(b"Game Lobby Started.\n")
                     await context['writer'].drain()
                     return  "CREATED"# Command handled, exit chain

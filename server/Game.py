@@ -7,21 +7,30 @@ import threading
 from Board import Board
 
 from Player import Player
+from Bot import Bot
 
 class Game:
 
     game_queue = dict()
-    def __init__(self, host, size=6):
+    def __init__(self, host, size=6, bot=0):
         self.players = [Player(*host)]
         self.size = size
         self.uuid = uuid.uuid4()
         self.b = Board()
         self.b.generateBoard()
         self.b.generatePawns(size)
+        for _ in range(bot):
+            self.players.append(Bot(self.b))
+            print("created a bot")
         self.variant = 1
         Game.game_queue[self.uuid] = self
 
 
+    async def check_for_start(self):
+        if len(self.players) == self.size:
+            print("Starting game")
+            Game.game_queue.pop(self.uuid)
+            await self.start()
     async def join(self, player):
         self.players.append(Player(*player))
 

@@ -1,4 +1,5 @@
 import json
+from collections import deque
 
 class Node:
 
@@ -25,6 +26,45 @@ class Node:
 
     def setPrefferedColor(self, color):
         self.preffered_color = color
+
+    def has_empty_neightbors(self):
+        for n in self.nodes:
+            if n and n.color == 0:
+                return True
+        return False
+
+    def metric(self, end):
+        start = self
+        """
+        Computes the minimal distance between two nodes in the graph.
+    
+        :param start: The starting Node object.
+        :param end: The target Node object.
+        :return: The shortest distance (integer) between start and end. 
+                 Returns -1 if there's no path between the nodes.
+        """
+        if start == end:
+            return 0
+
+        visited = set()
+        queue = deque([(start, 0)])  # (current_node, current_distance)
+
+        while queue:
+            current, distance = queue.popleft()
+
+            if current in visited:
+                continue
+
+            visited.add(current)
+
+            for neighbor in current.nodes:
+                if neighbor:  # Ensure the neighbor exists
+                    if neighbor == end:
+                        return distance + 1
+                    queue.append((neighbor, distance + 1))
+
+        # If we exhaust the queue without finding `end`, there's no path
+        return -1
 
 
     def __getitem__(self, index):

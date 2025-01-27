@@ -1,41 +1,19 @@
 from collections import deque
-from random import random
+import random
 
-from shared.Board import Board
+from Board import Board
 
 
 class Bot:
-    def __init__(self, players, mycolor, board: Board):
-
-        self.turn = 1
-        self.mycolor = mycolor
+    def __init__(self, board):
+        pass
+        # self.turn = 1
+        # self.mycolor = mycolor
         self.board = board
 
     def setTurn(self, turn):
         self.turn = turn
 
-    def shortest_path_length(start_node, end_node):
-
-        if start_node == end_node:
-            return 0  # If both nodes are the same, no traversal is needed
-
-        visited = set()  # To keep track of visited nodes
-        queue = deque([(start_node, 0)])  # Queue of tuples: (current_node, current_distance)
-
-        while queue:
-            current_node, distance = queue.popleft()
-
-            if current_node in visited:
-                continue
-
-            visited.add(current_node)
-
-            # Check all neighbors
-            for neighbor in current_node:
-                if neighbor is not None and neighbor.color == 0:  # Only traverse nodes with color 0
-                    if neighbor == end_node:
-                        return distance + 1  # Found the target node
-                    queue.append((neighbor, distance + 1))
 
         return -1
 
@@ -48,91 +26,80 @@ class Bot:
             List[Node]: A list of target nodes that match the criteria.
         """
         return [
-            node for node in self.board.nodeList
-            if node.preferred_color == self.mycolor and node.color == 0
+            node for node in self.board.getList()
+            if node.preffered_color == self.mycolor
+        ]
+    def get_my_nodes(self):
+        """
+        Finds all nodes on the board where `preferred_color` equals `self.mycolor`
+        and the node's color is 0 (empty).
+
+        Returns:
+            List[Node]: A list of target nodes that match the criteria.
+        """
+        return [
+            node for node in self.board.getList()
+            if node.color == self.mycolor
         ]
 
-    def find_closest_target(self, start_node, target_nodes):
-        """
-        Finds the closest node to `start_node` among the `target_nodes`.
-
-        Args:
-            start_node (Node): The node from which the distance is calculated.
-            target_nodes (List[Node]): A list of target nodes to consider.
-
-        Returns:
-            tuple: (closest_node, shortest_distance) if a valid path exists,
-                   (None, float('inf')) if no valid path is found.
-        """
-        closest_node = None
-        shortest_distance = float('inf')
-
-        for target_node in target_nodes:
-            distance = self.shortest_path_length(start_node, target_node)
-            if distance != -1 and distance < shortest_distance:
-                closest_node = target_node
-                shortest_distance = distance
-
-        return closest_node, shortest_distance
-
-    async def ApplyMessage(self, response):
-        if response is not None:
-            print(response)
+    async def applyMsg(self, response):
+        if response is None:
+            return None
+        if response.startswith("MOVE:"):
+            print("X")
             k, v = response.split(":")
-            if k == "MOVE":
-                a, b = self.board.getNodesByIDs((int(v.split(";")[0]), int(v.split(";")[1])))
-                a.color, b.color = b.color, a.color
-                self.setTurn(int(v.split(";")[2]))
-        return None
+            print(f"BOT X: k={k} v={v}")
+            p,q, r = v.split(";")
+            # print(f"BOT: {p} {q}")
+            # nodes = self.board.getNodesByIDs([int(p), int(q)])
+            # print(f"XXX: {nodes}")
+            # a.color, b.color = b.color, a.color
+            # print("XXXX")
+            self.setTurn(int(r))
+            print("BOT Applied move")
+        elif response.startswith("Game Started:"):
 
-    def getMessage(self):
-        """
-        Finds the first move for a node with `self.mycolor` that brings it closer
-        to a node with `preferred_color` equal to `self.mycolor`. If no such move
-        is found, it randomly moves a pawn to any neighboring empty space.
+            _, players, mycolor, turncolor = response.split(":")
+            print(players, mycolor, turncolor)
+            self.turn = int(turncolor)
+            self.mycolor = int(mycolor)
 
-        Returns:
-            str: A message in the format "start_node:end_node" representing the move.
-            None: If no valid move is found, and there are no pawns to move.
-        """
-        target_nodes = self.get_nodes_with_preferred_color()
+            print(f"BOT setting turn={turncolor}, mycolor={mycolor}, board=Board({players})")
 
-        # Iterate through all nodes with `self.mycolor`
-        for node in self.board.nodeList:
-            if node.color == self.mycolor:  # Check if the node has `self.mycolor`
-                closest_target, initial_distance = self.find_closest_target(node, target_nodes)
 
-                if closest_target is not None:
-                    # Check if moving to any neighbor reduces the distance to the target
-                    for neighbor in node:
-                        if neighbor is not None and neighbor.color == 0:  # Valid neighbor to move to
-                            # Temporarily simulate the move
-                            original_color = neighbor.color
-                            neighbor.color = self.mycolor
-                            node.color = 0
 
-                            _, new_distance = self.find_closest_target(neighbor, target_nodes)
+    async def getMsg(self):
+        if self.mycolor == self.turn:
+            print("BOT: my turn")
+        else:
+            return Non
 
-                            # Revert the move
-                            neighbor.color = original_color
-                            node.color = self.mycolor
+        my_nodes = self.get_my_nodes()
+        node = random.choice(my_nodes)
+        while not node.has_empty_neightbors():
+            node = random.choice(my_nodes)
 
-                            if new_distance < initial_distance:  # Valid improvement
-                                return f"{node.id}:{neighbor.id}"
+        targets = self.get_nodes_with_preferred_color()
 
-        # If no valid move found, randomly move a pawn to a neighboring empty space
-        available_pawns = [node for node in self.board.nodeList if node.color == self.mycolor]
+        target = targets[0]
+        l = node.metric(target)
+        for t in targets:
+            if (l1 := node.metric(t)) < l:
+                target = t
+                l = l1
 
-        for pawn in available_pawns:
-            # Get all neighboring nodes that are empty (color == 0)
-            empty_neighbors = [neighbor for neighbor in pawn if neighbor is not None and neighbor.color == 0]
+        candidate_moves = [n for n in node if n and n.color == 0]
+        for i in range(6):
+            if node[i] and node[i].color != 0 and node[i][i] and node[i][i].color == 0:
+                candidate_moves.append(node[i][i])
 
-            if empty_neighbors:
-                # Randomly select an empty neighboring space
-                random_empty_space = random.choice(empty_neighbors)
 
-                # Return the move message
-                return f"{pawn.id}:{random_empty_space.id}"
+        move = candidate_moves[0]
+        l = move.metric(target)
+        for n in candidate_moves:
+            if (l1 := n.metric(target)) < l:
+                move = n
+                l = l1
 
-        return None  # Return None if no valid move or pawns to move
+        return f"MOVE:{node.id};{move.id}"
 
