@@ -4,6 +4,7 @@ import time
 
 import threading
 
+from Database.DatabaseCommands import DataBase
 from Board import Board
 
 from Player import Player
@@ -25,6 +26,7 @@ class Game:
         self.variant = 1
         Game.game_queue[self.uuid] = self
 
+        self.DB = DataBase()
 
     async def check_for_start(self):
         if len(self.players) == self.size:
@@ -103,6 +105,9 @@ class Game:
             turn = (turn + 1) % self.size
 
             for r in self.players:
+                # add move to the database
+                self.DB.addMoveDB(self.uuid, f"{msg};{colors[turn]}")
+
                 await r.applyMsg(f"{msg};{colors[turn]}")
 
             await asyncio.sleep(0.01)
