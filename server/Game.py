@@ -1,11 +1,8 @@
 import asyncio
 import uuid
-import time
 
-import threading
-
-from Database.DatabaseCommands import DataBase
-from Board import Board
+from server.DatabaseCommands import DataBase
+from shared.Board import Board
 
 from Player import Player
 from Bot import Bot
@@ -43,6 +40,7 @@ class Game:
             await self.start()
 
     async def start(self):
+
 
         colors = [i + 1 for i in {
             2: (2,5),
@@ -104,10 +102,10 @@ class Game:
 
             turn = (turn + 1) % self.size
 
-            for r in self.players:
-                # add move to the database
-                self.DB.addMoveDB(self.uuid, f"{msg};{colors[turn]}")
+            # add move to the database
+            self.DB.addMoveDB(str(self.uuid), f"{msg};{colors[turn]}")
 
+            for r in self.players:
                 await r.applyMsg(f"{msg};{colors[turn]}")
 
             await asyncio.sleep(0.01)
